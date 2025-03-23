@@ -68,8 +68,20 @@ export async function getMultiLocationWeather(locations: string[]): Promise<Weat
   }
 }
 
+interface MockData {
+  [key: string]: {
+    temperature: number;
+    rainfall: number;
+    windSpeed: number;
+    humidity: number;
+    alert: "High" | "Medium" | "Low";
+    description: string;
+    icon: string;
+  };
+}
+
 function getFallbackWeatherData(location: string): WeatherData {
-  const mockData = {
+  const mockData: MockData = {
     darjeeling: {
       temperature: 22,
       rainfall: 95,

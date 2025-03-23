@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/contexts/auth-context"
+import { useAuth } from "@/lib/WrapLayout"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard" },

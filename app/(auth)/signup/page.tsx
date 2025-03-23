@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -49,13 +48,8 @@ export default function SignupPage() {
       setIsLoading(false)
       return
     }
-
-    // Simulate signup (replace with actual authentication)
     try {
-      // Mock successful signup
-      const response = await axios.post("/api/auth/signup", formData)
-      // Note: No need to redirect here as the auth context already handles it
-      console.log(response.data)
+      await axios.post("/api/auth/signup", formData)
       router.push("/login")
     } catch (err) {
       setError("Failed to create account. Please try again.")
@@ -135,7 +129,7 @@ export default function SignupPage() {
                 id="phonenumber"
                 name="phonenumber"
                 type="text"
-                placeholder="+911234567890"
+                placeholder="9100028432"
                 value={formData.phonenumber}
                 onChange={handleChange}
                 required

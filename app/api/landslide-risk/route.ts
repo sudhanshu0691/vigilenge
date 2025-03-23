@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 // Mock data for different locations
-const riskData = {
+const riskData: { [key: string]: any } = {
   darjeeling: {
     name: "Darjeeling",
     risk: "High",
