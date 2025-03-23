@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Bell, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/lib/WrapLayout"
+import axios from "axios"
+
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard" },
@@ -29,8 +30,17 @@ const navItems = [
 
 export function MainNav() {
   const pathname = usePathname()
-  const notificationCount = 3 // Example notification count
-  const { user, logout } = useAuth()
+  const router = useRouter(); 
+  const notificationCount = 3 
+
+  const logout = async () => {
+    try{
+        await axios.get("/api/auth/logout");
+        router.push("/login");
+    }catch(error){
+      console.error("Error logging out:", error)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -116,7 +126,7 @@ export function MainNav() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="hidden md:inline-flex">
-                {user ? user.name : "My Account"}
+                {"My Account"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

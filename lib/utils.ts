@@ -19,6 +19,7 @@ export const SetCookies = ({ name, value, exdays }: SetCookiesParameter) => {
 export const GetCookies = (name: string) => {
   if (name) {
     const decodeCookies = decodeURIComponent(document.cookie).split(" ");
+    console.log("decodeCookies:", decodeCookies);
     const filterCookies = decodeCookies.filter((cdata) =>
       cdata.split("=").includes(name)
     );

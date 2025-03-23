@@ -3,7 +3,7 @@ import { combineReducers } from 'redux';
 import userInfo from './reducer/userInfo';
 
 const rootReducer = combineReducers({
-  counter: userInfo,
+  userInfo: userInfo,
 });
 
 export const store = configureStore({

@@ -18,9 +18,12 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setUserInfo } from "@/store/reducer/userInfo";
 
 export default function LoginPage() {
   const router = useRouter();
+  const dipatch = useDispatch()
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,8 +32,14 @@ export default function LoginPage() {
 
   const fetchInfo = async () => {
     try {
-      const res = await axios.get("/api/user");
-      console.log(res.data);
+      const { data: { user} } = await axios.get("/api/user");
+      dipatch(setUserInfo({
+        name: user.name,
+        email: user.email,
+        phonenumber: user.phonenumber,
+        usertype: user.usertype
+      }));
+      router.push("/dashboard");
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -50,7 +59,6 @@ export default function LoginPage() {
     try {
       await axios.post("/api/auth/login", { email, password });
       await fetchInfo();
-      // router.push("/dashboard");
     } catch (err) {
       setError("Invalid email or password");
     } finally {
