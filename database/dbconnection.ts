@@ -1,21 +1,34 @@
-import mongoose from 'mongoose';
+import mongoose, { ConnectOptions, Mongoose } from "mongoose";
 
-const MONGODB_URI = process.env.MONGO_URI as string;
+const uri: string | undefined = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
-    throw new Error('Please define the MONGO_URI environment variable.');
+if (!uri) {
+  throw new Error("Please add your Mongo URI to .env.local");
 }
 
-// Improved caching logic
-let cached = (global as any).mongoose || { conn: null, promise: null };
+let cachedClient: Mongoose | null = null;
 
-async function dbConnect() {
-    try {
-        await mongoose.connect(process.env.MONGO_URI as string);
-        console.log('✅ MongoDB connected successfully');
-    } catch (error) {
-        console.error('❌ MongoDB connection error:', error);
-    }
+mongoose.set("strictQuery", true);
+
+const connectionParams = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+};
+
+export async function dbConnect(): Promise<Mongoose> {
+  if (cachedClient) {
+    return cachedClient;
+  }
+  try {
+    const client: Mongoose = await mongoose.connect(
+      uri as string,
+      connectionParams as ConnectOptions
+    );
+
+    cachedClient = client;
+    return client;
+  } catch (err) {
+    console.error(`Failed to connect to the database: ${err}`);
+    throw err;
+  }
 }
-
-export default dbConnect;

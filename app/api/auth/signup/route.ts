@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { validateFields } from "../../helper";
 import User from "@/database/models/User";
-import dbConnect from "@/database/dbconnection";
+import {dbConnect} from "@/database/dbconnection";
 
 export async function POST(request: Request) {
   try {
