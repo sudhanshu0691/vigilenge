@@ -136,18 +136,20 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="usertype">user Type</Label>
-              <Input
+              <Label htmlFor="usertype">User Type</Label>
+              <select
                 id="usertype"
                 name="usertype"
-                type="text"
-                placeholder="Enter once 'ndrf' or 'citizen'"
                 value={formData.usertype}
-                onChange={handleChange}
+                onChange={(e) => setFormData({ ...formData, usertype: e.target.value })}
                 required
-              />
+                className="w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="" disabled>Select user type</option>
+                <option value="ndrf">NDRF</option>
+                <option value="citizen">Citizen</option>
+              </select>
             </div>
-            
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Create account"}
             </Button>

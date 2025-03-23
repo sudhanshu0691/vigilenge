@@ -7,14 +7,14 @@ import { useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const dipatch = useDispatch();
+  const dispatch = useDispatch();
 
   const fetchInfo = async () => {
     try {
       const {
         data: { user },
       } = await axios.get("/api/user");
-      dipatch(
+      dispatch(
         setUserInfo({
           name: user.name,
           email: user.email,
