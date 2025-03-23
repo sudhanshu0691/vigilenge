@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,13 +12,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Eye, EyeOff, AlertCircle, Upload } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useSelector } from "react-redux"
+import { RootState } from "@/store"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile")
+  const userInfo = useSelector((state:RootState) => state.userInfo);
+  
   const [profileData, setProfileData] = useState({
     name: "John Doe",
     email: "john.doe@example.com",
-    phone: "+91 9876543210",
+    phonenumber: "+91 9876543210",
     city: "Kochi",
     state: "Kerala",
     country: "India",
@@ -98,6 +102,17 @@ export default function ProfilePage() {
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }))
   }
 
+  useEffect(()=>{
+    if(userInfo){
+      setProfileData({
+        ...profileData,
+        name: userInfo.name,
+        email: userInfo.email,
+        phonenumber: userInfo.phonenumber,
+      })
+    }
+  },[userInfo])
+
   return (
     <div className="container py-6">
       <div className="mb-6 flex flex-col space-y-4">
@@ -164,8 +179,8 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" name="phone" value={profileData.phone} onChange={handleProfileChange} />
+                      <Label htmlFor="phonenumber">Phone Number</Label>
+                      <Input id="phonenumber" name="phonenumber" value={profileData.phonenumber} onChange={handleProfileChange} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="city">City</Label>

@@ -8,9 +8,13 @@ import { AlertCircle, X, Bot } from "lucide-react"
 import { LineChart, BarChart } from "@/components/ui/chart"
 import { useChat } from "@/components/chat-provider"
 import { WeatherCard } from "@/components/weather-card"
+import { useSelector } from "react-redux"
+import { RootState } from "@/store"
 
 export default function DashboardPage() {
   const [showWarning, setShowWarning] = useState(true)
+  const isNDRF = useSelector((state: RootState) => state.userInfo.usertype === "ndrf" );
+
   const chatContext = useChat()
 
   // Simulated data for charts
@@ -133,7 +137,7 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="col-span-full lg:col-span-2">
+        {isNDRF && <Card className="col-span-full lg:col-span-2">
           <CardHeader>
             <CardTitle>Landslide Risk Monitoring</CardTitle>
             <CardDescription>Rainfall and landslide risk index over time</CardDescription>
@@ -166,11 +170,11 @@ export default function DashboardPage() {
               }}
             />
           </CardContent>
-        </Card>
-
+        </Card> }
+     
         <WeatherCard />
 
-        <Card className="lg:col-span-2">
+        {isNDRF && <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Landslide Incidents by Region</CardTitle>
             <CardDescription>Historical data from the past 5 years</CardDescription>
@@ -199,7 +203,8 @@ export default function DashboardPage() {
               }}
             />
           </CardContent>
-        </Card>
+        </Card> }
+
 
         <Card>
           <CardHeader>

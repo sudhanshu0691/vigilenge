@@ -17,6 +17,8 @@ import {
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import axios from "axios"
+import { useSelector } from "react-redux"
+import { RootState } from "@/store"
 
 
 const navItems = [
@@ -30,6 +32,8 @@ const navItems = [
 
 export function MainNav() {
   const pathname = usePathname()
+  const userInfo = useSelector((state:RootState) => state.userInfo);
+
   const router = useRouter(); 
   const notificationCount = 3 
 
@@ -126,7 +130,7 @@ export function MainNav() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="hidden md:inline-flex">
-                {"My Account"}
+                {userInfo.name || "My Account"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
