@@ -1,86 +1,53 @@
-import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { sign } from "jsonwebtoken"
+import { NextRequest, NextResponse } from "next/server";
+import User from "@/database/models/User";
+import bcrypt from "bcryptjs";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { email, password } = body
-
-    // Validate input
+    const body = await request.json();
+    const { email, password } = body;
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
         { status: 400 }
-      )
+      );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return NextResponse.json(
-        { error: "Invalid email format" },
-        { status: 400 }
-      )
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
     }
 
-    // TODO: Replace with actual database authentication
-    // This is a mock authentication
-    if (email === "ndrf@assam.gov.in" && password === "ndrf123") {
-      const user = {
-        id: "1",
-        name: "NDRF User",
-        email,
-        role: "NDRF" as const,
-      }
+    const token = user.generateAuthToken();
+    user.token = token;
+    await user.save();
 
-      const token = sign(user, JWT_SECRET, { expiresIn: "1d" })
+    const response = NextResponse.json({
+      message: "Login successful",
+      email: user.email,
+      phonenumber: user.phonenumber,
+      usertype: user.usertype,
+    });
 
-      // Set the auth cookie
-      cookies().set("auth", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24, // 1 day
-        path: "/", // Make sure cookie is available for all paths
-      })
-
-      return NextResponse.json(user)
-    }
-
-    // For demo purposes, also allow test@example.com
-    if (email === "test@example.com" && password === "test123") {
-      const user = {
-        id: "2",
-        name: "Test User",
-        email,
-        role: "user" as const,
-      }
-
-      const token = sign(user, JWT_SECRET, { expiresIn: "1d" })
-
-      cookies().set("auth", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24,
-        path: "/",
-      })
-
-      return NextResponse.json(user)
-    }
-
-    return NextResponse.json(
-      { error: "Invalid credentials" },
-      { status: 401 }
-    )
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 3600,
+      path: "/",
+    });
   } catch (error) {
-    console.error("Login error:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
-    )
+    );
   }
-} 
+}
