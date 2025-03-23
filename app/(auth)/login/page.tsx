@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth-context"
-
+import axios from "axios"
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
@@ -36,8 +36,10 @@ export default function LoginPage() {
 
     // Attempt login
     try {
-      await login(email, password)
+      const response = await axios.post("/api/auth/login", { email, password })
       // Note: No need to redirect here as the auth context already handles it
+      console.log(response.data)
+      router.push("/dashboard")
     } catch (err) {
       setError("Invalid email or password")
     } finally {

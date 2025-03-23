@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import User from "@/database/models/User";
 import bcrypt from "bcryptjs";
+import dbConnect from "@/database/dbconnection";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, password } = body;
+
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
         { status: 400 }
       );
     }
+
+    await dbConnect();
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -32,6 +36,7 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({
       message: "Login successful",
+      name: user.name,
       email: user.email,
       phonenumber: user.phonenumber,
       usertype: user.usertype,
@@ -44,6 +49,8 @@ export async function POST(request: NextRequest) {
       maxAge: 3600,
       path: "/",
     });
+
+    return response; // **Return the response here**
   } catch (error) {
     return NextResponse.json(
       { error: "Internal server error" },

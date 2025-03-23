@@ -15,7 +15,7 @@ const connectionParams = {
   useUnifiedTopology: true,
 };
 
-export async function dbConnect(): Promise<Mongoose> {
+async function dbConnect(): Promise<Mongoose> {
   if (cachedClient) {
     return cachedClient;
   }
@@ -32,3 +32,5 @@ export async function dbConnect(): Promise<Mongoose> {
     throw err;
   }
 }
+
+export default dbConnect;

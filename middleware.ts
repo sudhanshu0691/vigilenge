@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
     path === "/login" || path === "/signup" || path === "/" || path.startsWith("/_next") || path.startsWith("/api/auth")
 
   // Get the authentication token from cookies
-  const isAuthenticated = request.cookies.get("auth")?.value
+  const isAuthenticated = request.cookies.get("token")?.value
 
   // Redirect logic
   if (!isAuthenticated && !isPublicPath) {

@@ -1,12 +1,19 @@
 interface UserInput {
+    name: string;
     email: string;
     password: string;
     phonenumber: string;
     usertype: string;
 }
 
-export const validateFields = ({ email, password, phonenumber, usertype }: UserInput): Record<string, string> | null => {
+export const validateFields = ({ name, email, password, phonenumber, usertype }: UserInput): Record<string, string> | null => {
     const errors: Record<string, string> = {};
+
+    if (!name) {
+        errors.name = 'Name is required';
+    } else if (name.length < 2) {
+        errors.name = 'Name must be at least 3 characters long';
+    }
 
     if (!email) {
         errors.email = 'Email is required';

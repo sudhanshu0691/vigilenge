@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { validateFields } from "../../helper";
 import User from "@/database/models/User";
-import {dbConnect} from "@/database/dbconnection";
+import dbConnect from "@/database/dbconnection";
 
 export async function POST(request: Request) {
   try {
@@ -11,14 +11,15 @@ export async function POST(request: Request) {
     if (validationResult) {
       return NextResponse.json({ error: validationResult }, { status: 401 });
     } else {
-      const { email, password, phonenumber, usertype } = body;
+      const { name, email, password, phonenumber, usertype } = body;
       await dbConnect();
       const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = new User({
+        name,
         email,
         password: hashedPassword,
         phonenumber,
-        usertype,
+        usertype: usertype.toLowerCase(),
       });
       await newUser.save();
       return NextResponse.json(

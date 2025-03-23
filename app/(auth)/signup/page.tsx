@@ -11,14 +11,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import axios from "axios"
 
 export default function SignupPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phonenumber: "",
     password: "",
-    confirmPassword: "",
+    usertype: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
@@ -35,17 +37,12 @@ export default function SignupPage() {
     setIsLoading(true)
 
     // Validate form
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.name || !formData.email || !formData.password || !formData.usertype || !formData.phonenumber) {
       setError("Please fill in all fields")
       setIsLoading(false)
       return
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      setIsLoading(false)
-      return
-    }
 
     if (formData.password.length < 8) {
       setError("Password must be at least 8 characters long")
@@ -56,10 +53,10 @@ export default function SignupPage() {
     // Simulate signup (replace with actual authentication)
     try {
       // Mock successful signup
-      setTimeout(() => {
-        router.push("/dashboard")
-        setIsLoading(false)
-      }, 1500)
+      const response = await axios.post("/api/auth/signup", formData)
+      // Note: No need to redirect here as the auth context already handles it
+      console.log(response.data)
+      router.push("/login")
     } catch (err) {
       setError("Failed to create account. Please try again.")
       setIsLoading(false)
@@ -133,17 +130,30 @@ export default function SignupPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="phonenumber">Phone Number</Label>
               <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={formData.confirmPassword}
+                id="phonenumber"
+                name="phonenumber"
+                type="text"
+                placeholder="+911234567890"
+                value={formData.phonenumber}
                 onChange={handleChange}
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="usertype">user Type</Label>
+              <Input
+                id="usertype"
+                name="usertype"
+                type="text"
+                placeholder="Enter once 'ndrf' or 'citizen'"
+                value={formData.usertype}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Create account"}
             </Button>
