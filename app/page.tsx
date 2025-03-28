@@ -37,7 +37,7 @@ export default function Home() {
               </div>
               <div className="flex items-center justify-center">
                 <img
-                  src="/placeholder.svg?height=550&width=550"
+                  src="/public/login.jpg"
                   alt="Landslide Monitoring Dashboard"
                   className="rounded-lg object-cover shadow-lg"
                   width={550}
