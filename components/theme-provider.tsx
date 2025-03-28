@@ -1,4 +1,5 @@
 "use client";
+import Cookies from "js-cookie";
 import { setUserInfo } from "@/store/reducer/userInfo";
 import axios from "axios";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
@@ -28,7 +29,10 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   };
 
   useLayoutEffect(() => {
-    fetchInfo();
+    const isToken = Cookies.get("token");
+    if(isToken){
+      fetchInfo();
+    }
   }, []);
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
