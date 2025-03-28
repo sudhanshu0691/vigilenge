@@ -1,5 +1,4 @@
 "use client";
-import Cookies from "js-cookie";
 import { setUserInfo } from "@/store/reducer/userInfo";
 import axios from "axios";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
@@ -30,9 +29,10 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 
   const fetchCookies = async() => {
     try {
-      const res = await fetch("/api/auth/cookies");
-      // if()
-      console.log(res);
+      const { data } = await axios.get("/api/auth/cookies");
+      if (data.success) {
+        fetchInfo();
+      }
     }
     catch (error) {
       console.error("Error fetching cookies:", error);
