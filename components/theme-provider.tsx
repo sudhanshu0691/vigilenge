@@ -28,11 +28,19 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     }
   };
 
-  useLayoutEffect(() => {
-    const isToken = Cookies.get("token");
-    if(isToken){
-      fetchInfo();
+  const fetchCookies = async() => {
+    try {
+      const res = await fetch("/api/auth/cookies");
+      // if()
+      console.log(res);
     }
+    catch (error) {
+      console.error("Error fetching cookies:", error);
+    }
+  }
+
+  useLayoutEffect(() => {
+      fetchCookies()
   }, []);
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
