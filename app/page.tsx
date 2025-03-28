@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -36,8 +37,8 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex items-center justify-center">
-                <img
-                  src="/public/login.jpg"
+                <Image
+                  src="/images/login.jpg"
                   alt="Landslide Monitoring Dashboard"
                   className="rounded-lg object-cover shadow-lg"
                   width={550}
