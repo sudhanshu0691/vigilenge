@@ -1,58 +1,65 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { AlertCircle, X, Bot } from "lucide-react"
-import { LineChart, BarChart } from "@/components/ui/chart"
-import { useChat } from "@/components/chat-provider"
-import { WeatherCard } from "@/components/weather-card"
-import { useSelector } from "react-redux"
-import { RootState } from "@/store"
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, X, Bot } from "lucide-react";
+import { LineChart, BarChart } from "@/components/ui/chart";
+import { useChat } from "@/components/chat-provider";
+import { WeatherCard } from "@/components/weather-card";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 import { ref, onValue } from "firebase/database";
-import { firebaseDatabase } from "@/firebase/Firebase"
+import { firebaseDatabase } from "@/firebase/Firebase";
+import { Chart, ChartOptions } from "chart.js";
 
 export default function DashboardPage() {
-  const [showWarning, setShowWarning] = useState(true)
-  const [chartData, setChartData] = useState({ rain: [], soil: [] });
+  const chartRef = useRef<Chart<"line"> | null>(null);
+  const [showWarning, setShowWarning] = useState(true);
+  const [chartDataInfo, setChartDataInfo] = useState({
+    labels: [],
+    rain: [],
+    soil: [],
+  });
 
-  const isNDRF = useSelector((state: RootState) => state.userInfo.usertype === "ndrf");
+  const isNDRF = useSelector(
+    (state: RootState) => state.userInfo.usertype === "ndrf"
+  );
 
-  const chatContext = useChat()
+  const chatContext = useChat();
 
   useEffect(() => {
-    const usersRef = ref(firebaseDatabase, "/"); // Get reference to your Firebase Realtime Database
+    const usersRef = ref(firebaseDatabase, "/");
     const unsubscribe = onValue(usersRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        if (data?.sensor_data) {
-          setChartData({
-            rain: data?.sensor_data?.rain?.map((ele: any) => ele.value),
-            soil: data?.sensor_data?.soil?.map((ele: any) => ele.value),
-          })
-        }
-      } else {
-        setChartData({
-          rain: [],
-          soil: [],
-        })
+        setChartDataInfo({
+          labels: data?.sensor_data?.rain.map(
+            (ele: any) => new Date(ele.timestamp)
+          ).slice(-30),
+          rain: data?.sensor_data?.rain.map((ele: any) => new Date(ele.value)).slice(-30),
+          soil: data?.sensor_data?.soil.map((ele: any) => new Date(ele.value)).slice(-30),
+        });
       }
     });
 
-
     return () => unsubscribe();
-
   }, []);
 
-  console.log("chartData", chartData)
-  // Simulated data for charts
   const lineChartData = useMemo(() => {
     return {
+      labels: chartDataInfo.labels,
       datasets: [
         {
           label: "Rainfall (mm)",
-          data: chartData.rain,
+          data: chartDataInfo.rain,
           borderColor: "rgb(59, 130, 246)",
           backgroundColor: "rgba(59, 130, 246, 0.1)",
           tension: 0.3,
@@ -60,15 +67,40 @@ export default function DashboardPage() {
         },
         {
           label: "Landslide Risk Index",
-          data: chartData.soil,
+          data: chartDataInfo.soil,
           borderColor: "rgb(239, 68, 68)",
           backgroundColor: "rgba(239, 68, 68, 0.1)",
           tension: 0.3,
           fill: true,
         },
       ],
+    };
+  }, [chartDataInfo]);
+
+  useEffect(() => {
+    if (
+      chartRef.current &&
+      lineChartData.labels &&
+      lineChartData.labels.length > 0
+    ) {
+      const chart = chartRef.current;
+      const latest = new Date(
+        lineChartData.labels[lineChartData.labels.length - 1] as Date
+      );
+      const windowSize = 20 * 60 * 1000;
+
+      const from = new Date(latest.getTime() - windowSize);
+      const to = latest;
+
+      if (chart.options.scales && chart.options.scales.x) {
+        // @ts-ignore
+        chart.options.scales.x.min = from;
+        // @ts-ignore
+        chart.options.scales.x.max = to;
+        chart.update("none");
+      }
     }
-  }, [chartData])
+  }, [lineChartData]);
 
   const barChartData = {
     labels: ["Mumbai", "Delhi", "Indore", "jabalpur", "Kanpur"],
@@ -79,41 +111,8 @@ export default function DashboardPage() {
         backgroundColor: "rgba(59, 130, 246, 0.8)",
       },
     ],
-  }
+  };
 
-  // Weather data
-  const weatherData = [
-    {
-      location: "Mumbai",
-      temperature: "22°C",
-      rainfall: "120mm",
-      windSpeed: "15 km/h",
-      alert: "High",
-    },
-    {
-      location: "Delhi",
-      temperature: "24°C",
-      rainfall: "85mm",
-      windSpeed: "12 km/h",
-      alert: "Medium",
-    },
-    {
-      location: "Jabalpur",
-      temperature: "23°C",
-      rainfall: "110mm",
-      windSpeed: "18 km/h",
-      alert: "High",
-    },
-    {
-      location: "Kanpur",
-      temperature: "27°C",
-      rainfall: "45mm",
-      windSpeed: "10 km/h",
-      alert: "Low",
-    },
-  ]
-
-  // News data
   const newsData = [
     {
       title: "Heavy rainfall expected in Western Ghats region",
@@ -135,7 +134,50 @@ export default function DashboardPage() {
       date: "3 days ago",
       source: "Science Journal",
     },
-  ]
+  ];
+
+  const options: ChartOptions<"line"> = {
+    responsive: true,
+    scales: {
+      x: {
+        type: "time",
+        time: {
+          unit: "second",
+          // @ts-expect-error: stepSize is allowed but not typed
+          stepSize: 2,
+          tooltipFormat: "HH:mm:ss",
+          displayFormats: {
+            minute: "HH:mm",
+          },
+        },
+        title: {
+          display: true,
+          text: "Time",
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: "Value",
+        },
+      },
+    },
+    plugins: {
+      zoom: {
+        pan: {
+          enabled: false,
+        },
+        zoom: {
+          wheel: {
+            enabled: false,
+          },
+          pinch: {
+            enabled: false,
+          },
+        },
+      },
+    },
+  };
 
   return (
     <div className="container py-6">
@@ -148,7 +190,8 @@ export default function DashboardPage() {
           </Button>
         </div>
         <p className="text-muted-foreground">
-          Monitor landslide risks, weather conditions, and receive real-time alerts
+          Monitor landslide risks, weather conditions, and receive real-time
+          alerts
         </p>
       </div>
 
@@ -157,84 +200,77 @@ export default function DashboardPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Warning</AlertTitle>
           <AlertDescription>
-            High landslide risk detected in Munnar region due to continuous heavy rainfall. Please stay alert and follow
-            safety guidelines.
+            High landslide risk detected in Munnar region due to continuous
+            heavy rainfall. Please stay alert and follow safety guidelines.
           </AlertDescription>
-          <Button variant="ghost" size="icon" className="absolute right-2 top-2" onClick={() => setShowWarning(false)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2"
+            onClick={() => setShowWarning(false)}
+          >
             <X className="h-4 w-4" />
           </Button>
         </Alert>
       )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {isNDRF && <Card className="col-span-full lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Landslide Risk Monitoring</CardTitle>
-            <CardDescription>Rainfall and landslide risk index over time</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <LineChart
-              data={lineChartData}
-              className="aspect-[2/1] w-full"
-              options={{
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    title: {
-                      display: true,
-                      text: "Value",
-                    },
-                  },
-                },
-                plugins: {
-                  tooltip: {
-                    mode: "index",
-                    intersect: false,
-                  },
-                  legend: {
-                    position: "top",
-                  },
-                },
-                responsive: true,
-                maintainAspectRatio: false,
-              }}
-            />
-          </CardContent>
-        </Card>}
+        {isNDRF ||
+          (true && (
+            <Card className="col-span-full lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Landslide Risk Monitoring</CardTitle>
+                <CardDescription>
+                  Rainfall and landslide risk index over time
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LineChart
+                  data={lineChartData}
+                  className="aspect-[2/1] w-full"
+                  options={options}
+                  chartRef={chartRef}
+                />
+              </CardContent>
+            </Card>
+          ))}
 
         <WeatherCard />
 
-        {isNDRF && <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Landslide Incidents by Region</CardTitle>
-            <CardDescription>Historical data from the past 5 years</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BarChart
-              data={barChartData}
-              className="aspect-[2/1] w-full"
-              options={{
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    title: {
-                      display: true,
-                      text: "Number of Incidents",
+        {isNDRF && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Landslide Incidents by Region</CardTitle>
+              <CardDescription>
+                Historical data from the past 5 years
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BarChart
+                data={barChartData}
+                className="aspect-[2/1] w-full"
+                options={{
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      title: {
+                        display: true,
+                        text: "Number of Incidents",
+                      },
                     },
                   },
-                },
-                plugins: {
-                  legend: {
-                    display: false,
+                  plugins: {
+                    legend: {
+                      display: false,
+                    },
                   },
-                },
-                responsive: true,
-                maintainAspectRatio: false,
-              }}
-            />
-          </CardContent>
-        </Card>}
-
+                  responsive: true,
+                  maintainAspectRatio: false,
+                }}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
@@ -244,7 +280,10 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               {newsData.map((item, index) => (
-                <div key={index} className="border-b pb-3 last:border-0 last:pb-0">
+                <div
+                  key={index}
+                  className="border-b pb-3 last:border-0 last:pb-0"
+                >
                   <h4 className="font-medium">{item.title}</h4>
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>{item.date}</span>
@@ -257,6 +296,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
-
