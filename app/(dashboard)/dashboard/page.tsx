@@ -41,11 +41,15 @@ export default function DashboardPage() {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setChartDataInfo({
-          labels: data?.sensor_data?.rain.map(
-            (ele: any) => new Date(ele.timestamp)
-          ).slice(-30),
-          rain: data?.sensor_data?.rain.map((ele: any) => new Date(ele.value)).slice(-30),
-          soil: data?.sensor_data?.soil.map((ele: any) => new Date(ele.value)).slice(-30),
+          labels: data?.sensor_data?.rain
+            .map((ele: any) => new Date(ele.timestamp))
+            .slice(-30),
+          rain: data?.sensor_data?.rain
+            .map((ele: any) => new Date(ele.value))
+            .slice(-30),
+          soil: data?.sensor_data?.soil
+            .map((ele: any) => new Date(ele.value))
+            .slice(-30),
         });
       }
     });
@@ -215,25 +219,24 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {isNDRF ||
-          (true && (
-            <Card className="col-span-full lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Landslide Risk Monitoring</CardTitle>
-                <CardDescription>
-                  Rainfall and landslide risk index over time
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <LineChart
-                  data={lineChartData}
-                  className="aspect-[2/1] w-full"
-                  options={options}
-                  chartRef={chartRef}
-                />
-              </CardContent>
-            </Card>
-          ))}
+        {isNDRF && (
+          <Card className="col-span-full lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Landslide Risk Monitoring</CardTitle>
+              <CardDescription>
+                Rainfall and landslide risk index over time
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LineChart
+                data={lineChartData}
+                className="aspect-[2/1] w-full"
+                options={options}
+                chartRef={chartRef}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         <WeatherCard />
 
