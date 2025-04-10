@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -10,35 +10,65 @@ import { useChat } from "@/components/chat-provider"
 import { WeatherCard } from "@/components/weather-card"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
+import { ref, onValue } from "firebase/database";
+import { firebaseDatabase } from "@/firebase/Firebase"
 
 export default function DashboardPage() {
   const [showWarning, setShowWarning] = useState(true)
-  const isNDRF = useSelector((state: RootState) => state.userInfo.usertype === "ndrf" );
+  const [chartData, setChartData] = useState({ rain: [], soil: [] });
+
+  const isNDRF = useSelector((state: RootState) => state.userInfo.usertype === "ndrf");
 
   const chatContext = useChat()
 
+  useEffect(() => {
+    const usersRef = ref(firebaseDatabase, "/"); // Get reference to your Firebase Realtime Database
+    const unsubscribe = onValue(usersRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        if (data?.sensor_data) {
+          setChartData({
+            rain: data?.sensor_data?.rain?.map((ele: any) => ele.value),
+            soil: data?.sensor_data?.soil?.map((ele: any) => ele.value),
+          })
+        }
+      } else {
+        setChartData({
+          rain: [],
+          soil: [],
+        })
+      }
+    });
+
+
+    return () => unsubscribe();
+
+  }, []);
+
+  console.log("chartData", chartData)
   // Simulated data for charts
-  const lineChartData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
-    datasets: [
-      {
-        label: "Rainfall (mm)",
-        data: [65, 78, 90, 120, 150, 180, 190],
-        borderColor: "rgb(59, 130, 246)",
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
-        tension: 0.3,
-        fill: true,
-      },
-      {
-        label: "Landslide Risk Index",
-        data: [30, 35, 40, 50, 70, 85, 95],
-        borderColor: "rgb(239, 68, 68)",
-        backgroundColor: "rgba(239, 68, 68, 0.1)",
-        tension: 0.3,
-        fill: true,
-      },
-    ],
-  }
+  const lineChartData = useMemo(() => {
+    return {
+      datasets: [
+        {
+          label: "Rainfall (mm)",
+          data: chartData.rain,
+          borderColor: "rgb(59, 130, 246)",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+          tension: 0.3,
+          fill: true,
+        },
+        {
+          label: "Landslide Risk Index",
+          data: chartData.soil,
+          borderColor: "rgb(239, 68, 68)",
+          backgroundColor: "rgba(239, 68, 68, 0.1)",
+          tension: 0.3,
+          fill: true,
+        },
+      ],
+    }
+  }, [chartData])
 
   const barChartData = {
     labels: ["Mumbai", "Delhi", "Indore", "jabalpur", "Kanpur"],
@@ -170,8 +200,8 @@ export default function DashboardPage() {
               }}
             />
           </CardContent>
-        </Card> }
-     
+        </Card>}
+
         <WeatherCard />
 
         {isNDRF && <Card className="lg:col-span-2">
@@ -203,7 +233,7 @@ export default function DashboardPage() {
               }}
             />
           </CardContent>
-        </Card> }
+        </Card>}
 
 
         <Card>
