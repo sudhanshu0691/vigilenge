@@ -19,6 +19,9 @@ import { RootState } from "@/store";
 import { ref, onValue } from "firebase/database";
 import { firebaseDatabase } from "@/firebase/Firebase";
 import { Chart, ChartOptions } from "chart.js";
+import axios from "axios";
+
+let isMessageTimeInterval = true;
 
 export default function DashboardPage() {
   const chartRef = useRef<Chart<"line"> | null>(null);
@@ -28,6 +31,7 @@ export default function DashboardPage() {
     rain: [],
     soil: [],
   });
+  const [, setIsMessageTimeInterval] = useState(true)
 
   const isNDRF = useSelector(
     (state: RootState) => state.userInfo.usertype === "ndrf"
@@ -35,20 +39,42 @@ export default function DashboardPage() {
 
   const chatContext = useChat();
 
+  const callAlertMessageAPi = async (snapdata: { sensor_data: { rain: any[], soil: any[] } }) => {
+    const sensorData = snapdata.sensor_data;
+    const data = {
+      soilValue: sensorData.soil?.slice(-1)[0]?.value,
+      rainValue: sensorData.rain?.slice(-1)[0]?.value,
+    }
+    if (isMessageTimeInterval) {
+      try {
+        if (data?.rainValue > 60 || data?.soilValue > 60) {
+          await axios.post("/api/alert-service/risk-monitor-alert", data)
+          isMessageTimeInterval= false
+          setTimeout(() => {
+            isMessageTimeInterval = true;
+          }, 1000 * 60 * 5)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  }
+
   useEffect(() => {
     const usersRef = ref(firebaseDatabase, "/");
     const unsubscribe = onValue(usersRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
+        callAlertMessageAPi(data)
         setChartDataInfo({
           labels: data?.sensor_data?.rain
             .map((ele: any) => new Date(ele.timestamp))
             .slice(-30),
           rain: data?.sensor_data?.rain
-            .map((ele: any) => new Date(ele.value))
+            .map((ele: any) => ele.value)
             .slice(-30),
           soil: data?.sensor_data?.soil
-            .map((ele: any) => new Date(ele.value))
+            .map((ele: any) => ele.value)
             .slice(-30),
         });
       }
@@ -80,6 +106,7 @@ export default function DashboardPage() {
       ],
     };
   }, [chartDataInfo]);
+
 
   useEffect(() => {
     if (

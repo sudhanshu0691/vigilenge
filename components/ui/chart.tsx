@@ -59,7 +59,6 @@ function LineChart({
   chartRef,
   ...props
 }: ChartProps) {
-  console.log("LineChart data", data);
   return (
     <div className={cn("w-full h-full", className)} {...props}>
       <Line
